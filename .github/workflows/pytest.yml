@@ -12,6 +12,8 @@ jobs:
 
     steps:
     - uses: actions/checkout@v3
+      with:
+        submodules: 'recursive'
 
     - name: Set up Python ${{ matrix.python-version }}
       uses: actions/setup-python@v3
@@ -22,6 +24,7 @@ jobs:
       run: |
         sudo apt update
         sudo apt install -y postgresql
+        sudo apt install cmake gcc
         python -m pip install --upgrade pip uv
         uv sync
 
@@ -47,6 +50,14 @@ jobs:
         cd backend
         uv run alembic upgrade head
 
+    - name: Build Interfaces
+      run: |
+        cd backend/interfaces
+        mkdir build
+        cd build
+        cmake ..
+        make -j 16
+
     - name: Run pytest
       env:
         GS_DATABASE_USER: ci_user
@@ -55,5 +66,4 @@ jobs:
         GS_DATABASE_PORT: 5432
         GS_DATABASE_NAME: gs
       run: |
-        cd backend
         uv run pytest

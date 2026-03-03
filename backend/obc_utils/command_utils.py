@@ -4,33 +4,21 @@ from pathlib import Path
 from typing import Final
 
 from ax25 import Frame
-from serial import PARITY_NONE, STOPBITS_TWO, Serial
-
 from interfaces import (
     OBC_UART_BAUD_RATE,
     RS_DECODED_DATA_SIZE,
 )
-from interfaces.command_framing import command_multi_pack
-from interfaces.obc_gs_interface.commands import (
+from interfaces.obc_gs_interface.commands.python import (
     CmdCallbackId,
     CmdMsg,
     CmdResponseErrorCode,
-    create_cmd_downlink_logs_next_pass,
-    create_cmd_downlink_telem,
-    create_cmd_download_data,
-    create_cmd_end_of_frame,
-    create_cmd_erase_app,
-    create_cmd_exec_obc_reset,
-    create_cmd_i2c_probe,
-    create_cmd_mirco_sd_format,
-    create_cmd_ping,
-    create_cmd_rtc_sync,
-    create_cmd_set_programming_session,
-    create_cmd_uplink_disc,
-    create_cmd_verify_crc,
 )
-from interfaces.obc_gs_interface.commands.command_response_callbacks import parse_command_response
-from interfaces.obc_gs_interface.commands.command_response_classes import CmdRes
+from interfaces.obc_gs_interface.commands.python.command_factories import COMMAND_FACTORIES
+from interfaces.obc_gs_interface.commands.python.command_framing import command_multi_pack
+from interfaces.obc_gs_interface.commands.python.command_response_callbacks import parse_command_response
+from interfaces.obc_gs_interface.commands.python.command_response_classes import CmdRes
+from serial import PARITY_NONE, STOPBITS_TWO, Serial
+
 from obc_utils.encode_decode import CommsPipeline
 
 # This is a constant value set in the python and OBC side as to what length of I Frame the OBC will be waiting to
@@ -243,21 +231,7 @@ def generate_command(args: str) -> tuple[CmdMsg | None, bool]:
     # A list of Command factories for all commands
     # NOTE: Update these when a command is added and make sure to keep them in the order that the commands are described
     # in the CmdCallbackId Enum
-    commmand_factories: list[Callable[..., CmdMsg]] = [
-        create_cmd_end_of_frame,
-        create_cmd_exec_obc_reset,
-        create_cmd_rtc_sync,
-        create_cmd_downlink_logs_next_pass,
-        create_cmd_mirco_sd_format,
-        create_cmd_ping,
-        create_cmd_downlink_telem,
-        create_cmd_uplink_disc,
-        create_cmd_set_programming_session,
-        create_cmd_erase_app,
-        create_cmd_download_data,
-        create_cmd_verify_crc,
-        create_cmd_i2c_probe,
-    ]
+    commmand_factories: list[Callable[..., CmdMsg]] = COMMAND_FACTORIES
 
     # Loop through each of the specific parses and see if we get a valid parse on any of them
     for func in child_parsers:
