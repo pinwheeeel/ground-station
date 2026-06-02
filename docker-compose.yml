@@ -3,14 +3,14 @@ services:
     extra_hosts:
       - "host.docker.internal:host-gateway"
     build:
-      context: ../..
+      context: .
       dockerfile: scripts/dev/Dockerfile.backend
     ports:
       - "8000:8000"
     volumes:
-      - ../../backend:/app/backend
+      - ./backend:/app/backend
     env_file:
-      - ../../.env
+      - .env
     environment:
       - PYTHONPATH=/app/backend
       - GS_DATABASE_LOCATION=host.docker.internal
@@ -20,7 +20,8 @@ services:
     command:
     - |
       /opt/keycloak/bin/kc.sh start-dev --import-realm &
-      sleep 10
+      until echo > /dev/tcp/localhost/8080; do sleep 2; done
+      sleep 5
       /opt/keycloak/bin/kcadm.sh config credentials \
         --server http://localhost:8080 \
         --realm master \
@@ -31,30 +32,31 @@ services:
     environment:
       KC_BOOTSTRAP_ADMIN_USERNAME: mcc-admin
       KC_BOOTSTRAP_ADMIN_PASSWORD: uworbital
+      KC_HEALTH_ENABLED: true
     ports:
       - "8080:8080"
     volumes:
     - keycloak_data:/opt/keycloak/data
-    - ../../backend/mcc_keycloak/mcc-realm.json:/opt/keycloak/data/import/mcc-realm.json
+    - ./backend/mcc_keycloak/mcc-realm.json:/opt/keycloak/data/import/mcc-realm.json
   aro-frontend:
     build:
-      context: ../../frontend/aro
+      context: frontend/aro
       dockerfile: ../../scripts/dev/Dockerfile.aro
     ports:
       - "5173:5173"
     working_dir: /app
     volumes:
-      - ../../frontend/aro:/app
+      - ./frontend/aro:/app
       - /app/node_modules
   mcc-frontend:
     build:
-      context: ../../frontend/mcc
+      context: frontend/mcc
       dockerfile: ../../scripts/dev/Dockerfile.mcc
     ports:
       - "5174:5174"
     working_dir: /app
     volumes:
-      - ../../frontend/mcc:/app
+      - ./frontend/mcc:/app
       - /app/node_modules
 volumes:
   keycloak_data:
