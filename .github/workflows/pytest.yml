@@ -10,16 +10,6 @@ jobs:
       matrix:
         python-version: ["3.12"]
 
-    services:
-      postgres:
-        image: postgres:16-alpine
-        env:
-          POSTGRES_USER: ci_user
-          POSTGRES_PASSWORD: ci_password
-          POSTGRES_DB: gs
-        ports:
-          - "5432:5432"
-
     steps:
       - uses: actions/checkout@v3
         with:
@@ -36,26 +26,6 @@ jobs:
           sudo apt install cmake gcc
           python -m pip install --upgrade pip uv
           uv sync --extra dev
-
-      - name: Create CI .env file
-        run: |
-          cat > .env << EOF
-          GS_DATABASE_USER=ci_user
-          GS_DATABASE_PASSWORD=ci_password
-          GS_DATABASE_LOCATION=localhost
-          GS_DATABASE_PORT=5432
-          GS_DATABASE_NAME=gs
-          KEYCLOAK_URL=http://localhost:8080
-          KEYCLOAK_REALM=mcc
-          KEYCLOAK_CLIENT_ID=ground-station
-          KEYCLOAK_CLIENT_SECRET=foobar676767brainrot
-          KEYCLOAK_CALLBACK_URL=http://localhost:8000/callback
-          EOF
-
-      - name: Run Alembic migrations
-        run: |
-          cd backend
-          uv run alembic upgrade head
 
       - name: Build Interfaces
         run: |
